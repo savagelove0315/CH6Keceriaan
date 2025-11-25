@@ -57,7 +57,7 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        // --- 1. FIREBASE CONFIGURATION (已填入您的配置) ---
+        // --- 1. FIREBASE CONFIGURATION ---
         const firebaseConfig = {
             apiKey: "AIzaSyBDMII1pv8mhQLZ5He3YyM72qVbCwsizGY",
             authDomain: "ch6keceriaan.firebaseapp.com",
@@ -120,33 +120,22 @@
             const [reportGroup, setReportGroup] = useState('LOW');
             const [configError, setConfigError] = useState(null); 
 
-            // 1. Auth & Load (包含降级/访客模式)
+            // 1. Auth & Load
             useEffect(() => {
                 if (!auth) return;
-                
-                // 监听真实的登录状态
                 const unsubscribe = auth.onAuthStateChanged(u => {
                     if (u) {
                         setUser(u);
                         setConfigError(null);
                     }
                 });
-
-                // 尝试匿名登录
                 auth.signInAnonymously().catch(err => {
-                    console.warn("Login failed, trying fallback:", err);
-                    
-                    // 如果是配置错误(未开启Auth)，则启动访客模式
+                    console.warn("Login failed, fallback to guest:", err);
                     if (err.code === 'auth/configuration-not-found' || err.code === 'auth/operation-not-allowed') {
-                        // 生成一个假的本地ID
-                        let guestId = localStorage.getItem('cleanliness_guest_id');
-                        if (!guestId) {
-                            guestId = 'guest_' + Math.random().toString(36).substr(2, 9);
-                            localStorage.setItem('cleanliness_guest_id', guestId);
-                        }
-                        // 强制设置用户状态，绕过登录
+                        let guestId = localStorage.getItem('cleanliness_guest_id') || 'guest_' + Math.random().toString(36).substr(2, 9);
+                        localStorage.setItem('cleanliness_guest_id', guestId);
                         setUser({ uid: guestId, isAnonymous: true });
-                        setFeedbackMsg({ type: 'error', text: '⚠️ Auth未开启，已切换至访客模式' });
+                        setFeedbackMsg({ type: 'error', text: '⚠️ 访客模式 (Auth未开启)' });
                     } else {
                         setFeedbackMsg({ type: 'error', text: '登录失败: ' + err.code });
                     }
@@ -156,9 +145,7 @@
 
             // 2. Sync Data
             useEffect(() => {
-                // 只要有 user (不管是真的还是假的) 和 db 就可以同步
                 if (!user || !db) return;
-                
                 const unsubscribe = db.collection('weekly_scores').onSnapshot(snapshot => {
                     const data = {};
                     snapshot.forEach(doc => data[doc.id] = doc.data());
@@ -166,7 +153,7 @@
                     setLoading(false);
                 }, err => {
                     console.error("Read failed:", err);
-                    setFeedbackMsg({ type: 'error', text: '⚠️ 无法读取数据，请检查数据库规则' });
+                    setFeedbackMsg({ type: 'error', text: '⚠️ 数据读取失败' });
                 });
                 return () => unsubscribe();
             }, [user]);
@@ -176,7 +163,7 @@
 
             const submitScore = async () => {
                 if (!user || !db) {
-                    setFeedbackMsg({ type: 'error', text: '❌ 连接失败' });
+                    setFeedbackMsg({ type: 'error', text: '❌ 未连接数据库' });
                     return;
                 }
                 setIsSubmitting(true);
@@ -188,7 +175,7 @@
                         totalScore: total,
                         details: currentScores,
                         updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                        graderId: user.uid // 这里的 uid 可能是访客ID
+                        graderId: user.uid
                     });
                     setFeedbackMsg({ type: 'success', text: `✨ ${classId}班 分数已保存！` });
                     setTimeout(() => setFeedbackMsg(null), 3000);
@@ -220,12 +207,16 @@
                     {/* Header */}
                     <div className="no-print sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-white/20 px-4 py-3 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <div className="bg-indigo-100 p-2 rounded-xl text-indigo-600"><Sparkles size={20} className="fill-indigo-200" /></div>
-                            <div><div className="font-fun text-lg md:text-xl text-slate-800 leading-none">古晋中华小学第六校</div><div className="text-xs font-bold text-slate-500 mt-1">整洁比赛</div></div>
+                            {/* 标题区域：修改为 flex-col 实现上下排列 */}
+                            <div className="flex flex-col justify-center items-start">
+                                <span className="font-fun text-lg md:text-xl text-slate-800 leading-none">古晋中华小学第六校</span>
+                                <span className="text-xs font-bold text-slate-500 mt-1">整洁比赛系统</span>
+                            </div>
                         </div>
-                        <div className="bg-slate-100 p-1 rounded-full flex gap-1">
+                        
+                        <div className="bg-slate-100 p-1 rounded-full flex gap-1 flex-shrink-0">
                             {['ranking', 'grading', 'report'].map(t => (
-                                <button key={t} onClick={() => setActiveTab(t)} className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${activeTab === t ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400'}`}>
+                                <button key={t} onClick={() => setActiveTab(t)} className={`px-3 py-1.5 rounded-full text-sm font-bold transition-all ${activeTab === t ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400'}`}>
                                     {t === 'ranking' ? '🏆 榜单' : t === 'grading' ? '📝 评分' : '📊 报告'}
                                 </button>
                             ))}
@@ -310,8 +301,8 @@
                                             <div className="text-center font-serif border-b-2 border-black pb-4 mb-4"><h1 className="text-lg font-bold">古晋中华小学第六校</h1><h2 className="text-base font-bold">整洁比赛成绩报告</h2><p className="text-gray-500 text-xs">{new Date().toLocaleDateString()}</p></div>
                                             <div className="flex justify-between mb-4 font-bold text-xs"><span>组别: {reportGroup === 'LOW' ? '低年组' : '高年组'}</span><span>周次: 第 ___ 周</span></div>
                                             <table className="w-full text-left border-collapse border border-black mb-8 text-xs">
-                                                <thead><tr className="bg-gray-100"><th className="border border-black p-1 text-center">#</th><th className="border border-black p-1 text-center">班级</th><th className="border border-black p-1 text-center">总分</th><th className="border border-black p-1 text-center">细项 (地/布/桌/垃)</th></tr></thead>
-                                                <tbody>{reportData.map((d,i) => <tr key={d.id}><td className="border border-black p-1 text-center font-bold">{i+1}</td><td className="border border-black p-1 text-center font-bold">{d.id}</td><td className="border border-black p-1 text-center font-black">{d.score}</td><td className="border border-black p-1 text-[10px] text-gray-400">{d.details ? `${d.details.floor}/${d.details.noticeboard}/${d.details.desks}/${d.details.rubbish}` : '-'}</td></tr>)}</tbody>
+                                                <thead><tr className="bg-gray-100"><th className="border border-black p-1 text-center w-8">#</th><th className="border border-black p-1 text-center">班级</th><th className="border border-black p-1 text-center">总分</th><th className="border border-black p-1 text-center">细项 (地/布/桌/垃)</th></tr></thead>
+                                                <tbody>{reportData.map((d,i) => <tr key={d.id}><td className="border border-black p-1 text-center font-bold">{i+1}</td><td className="border border-black p-1 text-center font-bold">{d.id}</td><td className="border border-black p-1 text-center font-black">{d.score}</td><td className="border border-black p-1 text-center text-[10px] text-gray-400">{d.details ? `${d.details.floor}/${d.details.noticeboard}/${d.details.desks}/${d.details.rubbish}` : '-'}</td></tr>)}</tbody>
                                             </table>
                                             <div className="flex justify-between mt-8 pt-4"><div className="text-center"><div className="w-20 border-b border-black mb-1"></div><p className="text-[10px]">负责老师</p></div><div className="text-center"><div className="w-20 border-b border-black mb-1"></div><p className="text-[10px]">校长签名</p></div></div>
                                         </div>
@@ -332,7 +323,6 @@
                         </div>
                     )}
 
-                    {/* Feedback Toast */}
                     {feedbackMsg && <div className={`no-print fixed top-6 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-full shadow-2xl z-50 font-bold animate-bounce ${feedbackMsg.type === 'success' ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'}`}>{feedbackMsg.text}</div>}
 
                     {/* Hidden Print View */}
