@@ -47,29 +47,42 @@
         /* --- PRINT STYLES FIX --- */
         @media print {
             @page {
-                size: A4;
-                margin: 10mm; /* 设置打印边距，确保不被裁剪 */
+                size: A4 portrait; /* 强制 A4 纵向 */
+                margin: 5mm; /* 极窄边距，最大化空间 */
             }
             body * {
-                visibility: hidden; /* Hide everything by default */
+                visibility: hidden; /* 默认隐藏 */
             }
             .printable-report, .printable-report * {
-                visibility: visible; /* Make report visible */
+                visibility: visible; /* 显示报告 */
             }
             .printable-report {
-                display: block !important; /* Force display */
+                display: block !important;
                 position: absolute;
                 left: 0;
                 top: 0;
                 width: 100%;
                 margin: 0;
-                padding: 0;
+                padding: 10px; /* 稍微留点内边距 */
                 background: white;
                 z-index: 9999;
                 color: black;
             }
+            /* 强制表格紧凑布局 */
+            .printable-report table {
+                width: 100% !important;
+                font-size: 12px !important; /* 缩小字号 */
+                border-collapse: collapse;
+            }
+            .printable-report th, .printable-report td {
+                padding: 4px 8px !important; /* 缩小单元格间距 */
+            }
+            .printable-report h1 { font-size: 18px !important; margin-bottom: 4px !important; }
+            .printable-report h2 { font-size: 16px !important; margin-bottom: 4px !important; }
+            .printable-report p { font-size: 12px !important; }
+            
             .no-print {
-                display: none !important; /* Ensure buttons/headers don't print */
+                display: none !important;
             }
         }
     </style>
