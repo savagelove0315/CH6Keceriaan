@@ -44,12 +44,29 @@
         @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
         .animate-float { animation: float 3s ease-in-out infinite; }
         
-        /* Print */
+        /* --- PRINT STYLES FIX --- */
         @media print {
-            body * { visibility: hidden; }
-            .printable-report, .printable-report * { visibility: visible; }
-            .printable-report { position: fixed; left: 0; top: 0; width: 100%; height: 100%; padding: 20px; background: white; z-index: 9999; color: black; }
-            .no-print { display: none !important; }
+            body * {
+                visibility: hidden; /* Hide everything by default */
+            }
+            .printable-report, .printable-report * {
+                visibility: visible; /* Make report visible */
+            }
+            .printable-report {
+                display: block !important; /* ⚠️ CRITICAL FIX: Force display even if 'hidden' class is present */
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 20px;
+                background: white;
+                z-index: 9999;
+                color: black;
+            }
+            .no-print {
+                display: none !important; /* Ensure buttons/headers don't print */
+            }
         }
     </style>
 </head>
@@ -207,13 +224,11 @@
                     {/* Header */}
                     <div className="no-print sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-white/20 px-4 py-3 flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            {/* 标题区域：修改为 flex-col 实现上下排列 */}
                             <div className="flex flex-col justify-center items-start">
                                 <span className="font-fun text-lg md:text-xl text-slate-800 leading-none">古晋中华小学第六校</span>
                                 <span className="text-xs font-bold text-slate-500 mt-1">整洁比赛系统</span>
                             </div>
                         </div>
-                        
                         <div className="bg-slate-100 p-1 rounded-full flex gap-1 flex-shrink-0">
                             {['ranking', 'grading', 'report'].map(t => (
                                 <button key={t} onClick={() => setActiveTab(t)} className={`px-3 py-1.5 rounded-full text-sm font-bold transition-all ${activeTab === t ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-400'}`}>
@@ -302,7 +317,7 @@
                                             <div className="flex justify-between mb-4 font-bold text-xs"><span>组别: {reportGroup === 'LOW' ? '低年组' : '高年组'}</span><span>周次: 第 ___ 周</span></div>
                                             <table className="w-full text-left border-collapse border border-black mb-8 text-xs">
                                                 <thead><tr className="bg-gray-100"><th className="border border-black p-1 text-center w-8">#</th><th className="border border-black p-1 text-center">班级</th><th className="border border-black p-1 text-center">总分</th><th className="border border-black p-1 text-center">细项 (地/布/桌/垃)</th></tr></thead>
-                                                <tbody>{reportData.map((d,i) => <tr key={d.id}><td className="border border-black p-1 text-center font-bold">{i+1}</td><td className="border border-black p-1 text-center font-bold">{d.id}</td><td className="border border-black p-1 text-center font-black">{d.score}</td><td className="border border-black p-1 text-center text-[10px] text-gray-400">{d.details ? `${d.details.floor}/${d.details.noticeboard}/${d.details.desks}/${d.details.rubbish}` : '-'}</td></tr>)}</tbody>
+                                                <tbody>{reportData.map((d,i) => <tr key={d.id}><td className="border border-black p-1 text-center font-bold">{i+1}</td><td className="border border-black p-1 text-center font-bold">{d.id}</td><td className="border border-black p-1 text-center font-black">{d.score}</td><td className="border border-black p-1 text-sm text-center">{d.details ? `${d.details.floor}/${d.details.noticeboard}/${d.details.desks}/${d.details.rubbish}` : '-'}</td></tr>)}</tbody>
                                             </table>
                                             <div className="flex justify-between mt-8 pt-4"><div className="text-center"><div className="w-20 border-b border-black mb-1"></div><p className="text-[10px]">负责老师</p></div><div className="text-center"><div className="w-20 border-b border-black mb-1"></div><p className="text-[10px]">校长签名</p></div></div>
                                         </div>
