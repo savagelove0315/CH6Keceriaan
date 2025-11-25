@@ -44,22 +44,79 @@
         @keyframes float { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-10px); } }
         .animate-float { animation: float 3s ease-in-out infinite; }
         
-        /* --- PRINT STYLES --- */
+        /* --- PRINT STYLES FIX (Fit to Page) --- */
         @media print {
-            @page { size: A4 portrait; margin: 5mm; }
-            body * { visibility: hidden; }
-            .printable-report, .printable-report * { visibility: visible; }
+            @page {
+                size: A4 portrait;
+                margin: 8mm; /* 稍微留点边距，但保持紧凑 */
+            }
+            html, body {
+                height: 100%;
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden; /* 防止溢出生成多页 */
+            }
+            body * {
+                visibility: hidden; /* 默认隐藏所有屏幕元素 */
+            }
+            .printable-report, .printable-report * {
+                visibility: visible; /* 只显示报告部分 */
+            }
             .printable-report {
                 display: block !important;
-                position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 10px;
-                background: white; z-index: 9999; color: black;
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 0;
+                background: white;
+                z-index: 9999;
+                color: black;
+                box-sizing: border-box;
             }
-            .printable-report table { width: 100% !important; font-size: 12px !important; border-collapse: collapse; }
-            .printable-report th, .printable-report td { padding: 4px 8px !important; }
-            .printable-report h1 { font-size: 18px !important; margin-bottom: 4px !important; }
-            .printable-report h2 { font-size: 16px !important; margin-bottom: 4px !important; }
-            .printable-report p { font-size: 12px !important; }
-            .no-print { display: none !important; }
+            
+            /* 紧凑排版 */
+            .printable-report h1 { font-size: 22px !important; margin-bottom: 4px !important; line-height: 1.2; }
+            .printable-report h2 { font-size: 16px !important; margin-bottom: 2px !important; line-height: 1.2; }
+            .printable-report p { font-size: 12px !important; margin-bottom: 10px !important; }
+            
+            .printable-report .report-meta {
+                margin-bottom: 8px !important;
+                padding-bottom: 4px !important;
+                border-bottom: 1px solid #000;
+            }
+
+            /* 表格极致紧凑 */
+            .printable-report table {
+                width: 100% !important;
+                font-size: 11px !important; /* 缩小表格字号 */
+                border-collapse: collapse;
+                margin-bottom: 15px !important;
+            }
+            .printable-report th {
+                background-color: #f3f4f6 !important;
+                color: #000 !important;
+                font-weight: 800 !important;
+                padding: 4px 2px !important; /* 极小内边距 */
+                border: 1px solid #000 !important;
+            }
+            .printable-report td {
+                padding: 3px 2px !important; /* 极小内边距 */
+                border: 1px solid #000 !important;
+                vertical-align: middle;
+            }
+            
+            /* 签名栏位置 */
+            .printable-report .signature-section {
+                margin-top: 25px !important;
+                page-break-inside: avoid;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
         }
     </style>
 </head>
@@ -246,7 +303,7 @@
                                 </div>
                                 {/* Podium */}
                                 {sortedClasses.length > 0 && (
-                                    <div className="flex items-end justify-center gap-4 mb-8 mt-4 px-2">
+                                    <div className="flex items-end justify-center gap-4 mb-8 mt-12 px-2">
                                         <div className="w-1/3 flex flex-col items-center">{sortedClasses[1] && <div className="w-full aspect-[4/5] bg-white rounded-2xl border-b-4 border-gray-200 shadow-sm flex flex-col items-center justify-center p-2"><div className="text-2xl font-black text-gray-700 font-num">{sortedClasses[1].id}</div><div className="mt-2 text-xl font-black text-emerald-500">{sortedClasses[1].score}</div></div>}</div>
                                         <div className="w-5/12 flex flex-col items-center -mt-6 relative z-10">
                                             {sortedClasses[0] && <div className="relative w-full aspect-[4/5] card-gold rounded-3xl flex flex-col items-center justify-center p-2"><div className="absolute -top-6 animate-float"><Crown size={32} className="text-yellow-400 fill-yellow-200"/></div><div className="text-4xl font-black text-yellow-900 font-fun">{sortedClasses[0].id}</div><div className="mt-1 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-2xl font-black shadow-sm font-num">{sortedClasses[0].score}</div></div>}
@@ -310,17 +367,7 @@
                                             <div className="flex justify-between mb-4 font-bold text-xs"><span>组别: {reportGroup === 'LOW' ? '低年组' : '高年组'}</span><span>周次: 第 ___ 周</span></div>
                                             <table className="w-full text-left border-collapse border border-black mb-8 text-xs">
                                                 <thead><tr className="bg-gray-100"><th className="border border-black p-1 text-center w-8">#</th><th className="border border-black p-1 text-center">班级</th><th className="border border-black p-1 text-center">总分</th><th className="border border-black p-1 text-center">细项 (地/布/桌/垃)</th></tr></thead>
-                                                <tbody>{reportData.map((item, idx) => (
-                                                        <tr key={item.id}>
-                                                            <td className="border border-black p-1 text-center font-bold">{idx + 1}</td>
-                                                            <td className="border border-black p-1 text-center font-bold">{item.id}</td>
-                                                            <td className="border border-black p-1 text-center font-black">{item.score}</td>
-                                                            <td className="border border-black p-1 text-center text-[10px] text-gray-400">
-                                                                {item.details ? `${item.details.floor}/${item.details.noticeboard}/${item.details.desks}/${item.details.rubbish}` : '-'}
-                                                            </td>
-                                                        </tr>
-                                                    ))}
-                                                    {reportData.length === 0 && <tr><td colSpan="4" className="p-4 text-center text-gray-400">暂无数据</td></tr>}</tbody>
+                                                <tbody>{reportData.map((d,i) => <tr key={d.id}><td className="border border-black p-1 text-center font-bold">{i+1}</td><td className="border border-black p-1 text-center font-bold">{d.id}</td><td className="border border-black p-1 text-center font-black">{d.score}</td><td className="border border-black p-1 text-sm text-center">{d.details ? `${d.details.floor}/${d.details.noticeboard}/${d.details.desks}/${d.details.rubbish}` : '-'}</td></tr>)}</tbody>
                                             </table>
                                             <div className="flex justify-between mt-8 pt-4"><div className="text-center"><div className="w-20 border-b border-black mb-1"></div><p className="text-[10px]">负责老师</p></div><div className="text-center"><div className="w-20 border-b border-black mb-1"></div><p className="text-[10px]">校长签名</p></div></div>
                                         </div>
@@ -347,17 +394,10 @@
                     <div className="printable-report hidden">
                         <div className="max-w-[210mm] mx-auto p-8">
                             <div className="text-center font-serif border-b-2 border-black pb-4 mb-6"><h1 className="text-3xl font-bold mb-2">古晋中华小学第六校</h1><h2 className="text-2xl font-bold mb-2">整洁比赛成绩报告</h2><p className="text-lg text-gray-600">{new Date().toLocaleDateString()}</p></div>
-                            <div className="flex justify-between mb-6 font-bold text-xl border-b pb-2"><span>组别: {reportGroup === 'LOW' ? '低年组' : '高年组'}</span></div>
+                            <div className="flex justify-between mb-6 font-bold text-xl border-b pb-2"><span>组别: {reportGroup === 'LOW' ? '低年组' : '高年组'}</span><span>报告生成时间: {new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute:'2-digit' })}</span></div>
                             <table className="w-full text-left border-collapse border border-black mb-12 text-lg">
                                 <thead><tr className="bg-gray-100"><th className="border border-black p-3 text-center">名次</th><th className="border border-black p-3 text-center">班级</th><th className="border border-black p-3 text-center">总分</th><th className="border border-black p-3 text-center">细项 (地/布/桌/垃)</th></tr></thead>
-                                <tbody>{reportData.map((item, idx) => (
-                                        <tr key={item.id}>
-                                            <td className="border border-black p-3 text-center font-bold">{idx + 1}</td>
-                                            <td className="border border-black p-3 text-center font-bold">{item.id}</td>
-                                            <td className="border border-black p-3 text-center font-black">{item.score}</td>
-                                            <td className="border border-black p-3 text-sm text-center">{item.details ? `${item.details.floor}/${item.details.noticeboard}/${item.details.desks}/${item.details.rubbish}` : '-'}</td>
-                                        </tr>
-                                    ))}</tbody>
+                                <tbody>{reportData.map((d,i) => <tr key={d.id}><td className="border border-black p-3 text-center font-bold">{i+1}</td><td className="border border-black p-3 text-center font-bold">{d.id}</td><td className="border border-black p-3 text-center font-black">{d.score}</td><td className="border border-black p-3 text-sm text-center">{d.details ? `${d.details.floor}/${d.details.noticeboard}/${d.details.desks}/${d.details.rubbish}` : '-'}</td></tr>)}</tbody>
                             </table>
                             <div className="flex justify-between mt-20"><div className="text-center"><div className="w-48 border-b border-black mb-2"></div><p className="font-serif">负责老师签名</p></div><div className="text-center"><div className="w-48 border-b border-black mb-2"></div><p className="font-serif">校长核阅</p></div></div>
                         </div>
