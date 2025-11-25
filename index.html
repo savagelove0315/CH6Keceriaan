@@ -46,6 +46,10 @@
         
         /* --- PRINT STYLES FIX --- */
         @media print {
+            @page {
+                size: A4;
+                margin: 10mm; /* 设置打印边距，确保不被裁剪 */
+            }
             body * {
                 visibility: hidden; /* Hide everything by default */
             }
@@ -53,13 +57,13 @@
                 visibility: visible; /* Make report visible */
             }
             .printable-report {
-                display: block !important; /* ⚠️ CRITICAL FIX: Force display even if 'hidden' class is present */
+                display: block !important; /* Force display */
                 position: absolute;
                 left: 0;
                 top: 0;
                 width: 100%;
                 margin: 0;
-                padding: 20px;
+                padding: 0;
                 background: white;
                 z-index: 9999;
                 color: black;
@@ -317,7 +321,7 @@
                                             <div className="flex justify-between mb-4 font-bold text-xs"><span>组别: {reportGroup === 'LOW' ? '低年组' : '高年组'}</span><span>周次: 第 ___ 周</span></div>
                                             <table className="w-full text-left border-collapse border border-black mb-8 text-xs">
                                                 <thead><tr className="bg-gray-100"><th className="border border-black p-1 text-center w-8">#</th><th className="border border-black p-1 text-center">班级</th><th className="border border-black p-1 text-center">总分</th><th className="border border-black p-1 text-center">细项 (地/布/桌/垃)</th></tr></thead>
-                                                <tbody>{reportData.map((d,i) => <tr key={d.id}><td className="border border-black p-1 text-center font-bold">{i+1}</td><td className="border border-black p-1 text-center font-bold">{d.id}</td><td className="border border-black p-1 text-center font-black">{d.score}</td><td className="border border-black p-1 text-sm text-center">{d.details ? `${d.details.floor}/${d.details.noticeboard}/${d.details.desks}/${d.details.rubbish}` : '-'}</td></tr>)}</tbody>
+                                                <tbody>{reportData.map((d,i) => <tr key={d.id}><td className="border border-black p-1 text-center font-bold">{i+1}</td><td className="border border-black p-1 text-center font-bold">{d.id}</td><td className="border border-black p-1 text-center font-black">{d.score}</td><td className="border border-black p-1 text-center text-[10px] text-gray-400">{d.details ? `${d.details.floor}/${d.details.noticeboard}/${d.details.desks}/${d.details.rubbish}` : '-'}</td></tr>)}</tbody>
                                             </table>
                                             <div className="flex justify-between mt-8 pt-4"><div className="text-center"><div className="w-20 border-b border-black mb-1"></div><p className="text-[10px]">负责老师</p></div><div className="text-center"><div className="w-20 border-b border-black mb-1"></div><p className="text-[10px]">校长签名</p></div></div>
                                         </div>
@@ -342,14 +346,52 @@
 
                     {/* Hidden Print View */}
                     <div className="printable-report hidden">
-                        <div className="max-w-[210mm] mx-auto p-8">
-                            <div className="text-center font-serif border-b-2 border-black pb-4 mb-6"><h1 className="text-3xl font-bold mb-2">古晋中华小学第六校</h1><h2 className="text-2xl font-bold mb-2">整洁比赛成绩报告</h2><p className="text-lg text-gray-600">{new Date().toLocaleDateString()}</p></div>
-                            <div className="flex justify-between mb-6 font-bold text-xl border-b pb-2"><span>组别: {reportGroup === 'LOW' ? '低年组' : '高年组'}</span></div>
-                            <table className="w-full text-left border-collapse border border-black mb-12 text-lg">
-                                <thead><tr className="bg-gray-100"><th className="border border-black p-3 text-center">名次</th><th className="border border-black p-3 text-center">班级</th><th className="border border-black p-3 text-center">总分</th><th className="border border-black p-3 text-center">细项 (地/布/桌/垃)</th></tr></thead>
-                                <tbody>{reportData.map((d,i) => <tr key={d.id}><td className="border border-black p-3 text-center font-bold">{i+1}</td><td className="border border-black p-3 text-center font-bold">{d.id}</td><td className="border border-black p-3 text-center font-black">{d.score}</td><td className="border border-black p-3 text-sm text-center">{d.details ? `${d.details.floor}/${d.details.noticeboard}/${d.details.desks}/${d.details.rubbish}` : '-'}</td></tr>)}</tbody>
+                        <div className="max-w-[210mm] mx-auto p-4">
+                            <div className="text-center font-serif border-b-2 border-black pb-2 mb-4">
+                                <h1 className="text-2xl font-bold mb-1">古晋中华小学第六校</h1>
+                                <h2 className="text-xl font-bold mb-1">整洁比赛成绩报告</h2>
+                                <p className="text-sm text-gray-600">{new Date().toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                            </div>
+                            
+                            <div className="flex justify-between mb-4 font-bold text-lg border-b pb-1">
+                                <span>组别: {reportGroup === 'LOW' ? '低年组' : '高年组'}</span>
+                            </div>
+
+                            <table className="w-full text-left border-collapse border border-black mb-6 text-sm">
+                                <thead>
+                                    <tr className="bg-gray-100">
+                                        <th className="border border-black p-2 text-center w-16">名次</th>
+                                        <th className="border border-black p-2 text-center">班级</th>
+                                        <th className="border border-black p-2 text-center">总分 (50分)</th>
+                                        <th className="border border-black p-2 text-center">细项得分 (地面/布告/桌椅/垃圾)</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {reportData.map((item, idx) => (
+                                        <tr key={item.id}>
+                                            <td className="border border-black p-2 text-center font-bold">{idx + 1}</td>
+                                            <td className="border border-black p-2 text-center font-bold text-lg">{item.id}</td>
+                                            <td className="border border-black p-2 text-center font-black text-lg">{item.score}</td>
+                                            <td className="border border-black p-2 text-xs text-center">
+                                                {item.details ? 
+                                                    `${item.details.floor} / ${item.details.noticeboard} / ${item.details.desks} / ${item.details.rubbish}` 
+                                                    : '暂无细项'}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
                             </table>
-                            <div className="flex justify-between mt-20"><div className="text-center"><div className="w-48 border-b border-black mb-2"></div><p className="font-serif">负责老师签名</p></div><div className="text-center"><div className="w-48 border-b border-black mb-2"></div><p className="font-serif">校长核阅</p></div></div>
+
+                            <div className="flex justify-between mt-10">
+                                <div className="text-center">
+                                    <div className="w-40 border-b border-black mb-2"></div>
+                                    <p className="font-serif text-sm">负责老师签名</p>
+                                </div>
+                                <div className="text-center">
+                                    <div className="w-40 border-b border-black mb-2"></div>
+                                    <p className="font-serif text-sm">校长核阅</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
